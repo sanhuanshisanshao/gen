@@ -124,6 +124,7 @@ func argParse() *CmdParams {
 	genPath := flag.String("c", "gen.yml", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	db := flag.String("db", "", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	dmTablespaceName := flag.String("dmTablespaceName", "", "")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
 	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
 	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
@@ -147,6 +148,9 @@ func argParse() *CmdParams {
 	}
 	if *db != "" {
 		cmdParse.DB = *db
+	}
+	if *dmTablespaceName != "" {
+		cmdParse.DMTablespaceName = *dmTablespaceName
 	}
 	if *tableList != "" {
 		cmdParse.Tables = strings.Split(*tableList, ",")
