@@ -104,7 +104,17 @@ func (g *Generator) GenerateModel(tableName string, opts ...ModelOpt) *generate.
 
 // GenerateModelAs catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...ModelOpt) *generate.QueryStructMeta {
-	meta, err := generate.GetQueryStructMeta(g.db, g.genModelConfig(tableName, modelName, opts))
+	conf := g.genModelConfig(tableName, modelName, opts)
+	if g.Config.DMTablespaceName != "" {
+		conf.ModelNameNS = func(tableName string) string {
+			return strings.ReplaceAll(strings.ReplaceAll(tableName, ".", ""), g.Config.DMTablespaceName, "")
+		}
+		conf.FileNameNS = func(tableName string) string {
+			return strings.ToLower(strings.ReplaceAll(tableName, ".", "_"))
+		}
+	}
+
+	meta, err := generate.GetQueryStructMeta(g.db, conf)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/sanhuanshisanshao/gen"
+	dm "github.com/sanhuanshisanshao/gorm-driver-dm"
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -20,11 +21,12 @@ import (
 type DBType string
 
 const (
-	// dbMySQL Gorm Drivers mysql || postgres || sqlite || sqlserver
+	// dbMySQL Gorm Drivers mysql || postgres || sqlite || sqlserver || dm
 	dbMySQL     DBType = "mysql"
 	dbPostgres  DBType = "postgres"
 	dbSQLite    DBType = "sqlite"
 	dbSQLServer DBType = "sqlserver"
+	dbDM        DBType = "dm"
 )
 const (
 	// DefaultOutPath default path
@@ -35,6 +37,7 @@ const (
 type CmdParams struct {
 	DSN               string   `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
 	DB                string   `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	DMTablespaceName  string   `yaml:"dmTablespaceName"`  //
 	Tables            []string `yaml:"tables"`            // enter the required data table or leave it blank
 	OnlyModel         bool     `yaml:"onlyModel"`         // only generate model
 	OutPath           string   `yaml:"outPath"`           // specify a directory for output
@@ -54,7 +57,7 @@ type YamlConfig struct {
 }
 
 // connectDB choose db type for connection to database
-func connectDB(t DBType, dsn string) (*gorm.DB, error) {
+func connectDB(t DBType, dsn, tableSpaceName string) (*gorm.DB, error) {
 	if dsn == "" {
 		return nil, fmt.Errorf("dsn cannot be empty")
 	}
@@ -68,6 +71,13 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 		return gorm.Open(sqlite.Open(dsn))
 	case dbSQLServer:
 		return gorm.Open(sqlserver.Open(dsn))
+	case dbDM:
+		db, err := gorm.Open(dm.Open(dsn, tableSpaceName), &gorm.Config{})
+		if err != nil {
+			return db, err
+		}
+		dm.TB(db)
+		return db, nil
 	default:
 		return nil, fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", t)
 	}
@@ -111,9 +121,9 @@ func loadConfigFile(path string) (*CmdParams, error) {
 // argParse is parser for cmd
 func argParse() *CmdParams {
 	// choose is file or flag
-	genPath := flag.String("c", "", "is path for gen.yml")
+	genPath := flag.String("c", "gen.yml", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", "mysql", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := flag.String("db", "", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
 	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
 	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
@@ -177,12 +187,13 @@ func main() {
 	if config == nil {
 		log.Fatalln("parse config fail")
 	}
-	db, err := connectDB(DBType(config.DB), config.DSN)
+	db, err := connectDB(DBType(config.DB), config.DSN, config.DMTablespaceName)
 	if err != nil {
 		log.Fatalln("connect db server fail:", err)
 	}
 
 	g := gen.NewGenerator(gen.Config{
+		DMTablespaceName:  config.DMTablespaceName,
 		OutPath:           config.OutPath,
 		OutFile:           config.OutFile,
 		ModelPkgPath:      config.ModelPkgName,
