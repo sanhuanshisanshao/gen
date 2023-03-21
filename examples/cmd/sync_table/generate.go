@@ -3,9 +3,9 @@ package main
 import (
 	"strings"
 
-	"gorm.io/gen"
-	"gorm.io/gen/examples/conf"
-	"gorm.io/gen/examples/dal"
+	"github.com/sanhuanshisanshao/gen"
+	"github.com/sanhuanshisanshao/gen/examples/conf"
+	"github.com/sanhuanshisanshao/gen/examples/dal"
 )
 
 func init() {

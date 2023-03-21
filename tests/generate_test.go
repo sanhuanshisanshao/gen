@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gen"
+	"github.com/sanhuanshisanshao/gen"
 )
 
 const (
