@@ -3,7 +3,7 @@ module github.com/sanhuanshisanshao/gen
 go 1.18
 
 require (
-	github.com/sanhuanshisanshao/gorm-driver-dm v0.0.0-20230321092722-50f7a395b141
+	github.com/sanhuanshisanshao/gorm-driver-dm v0.0.0-20230322080514-1755603f38bd
 	golang.org/x/tools v0.1.12
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.0.7
@@ -41,3 +41,5 @@ require (
 	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
+
+//replace github.com/sanhuanshisanshao/gorm-driver-dm => /Users/gaoqiang/workspace/gorm-driver-dm
